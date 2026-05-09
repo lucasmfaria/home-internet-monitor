@@ -1,0 +1,111 @@
+services:
+  # ──────────────────────────────────────────────
+  # InfluxDB 2.7 — Time-Series Database
+  # ──────────────────────────────────────────────
+  influxdb:
+    image: influxdb:2.7
+    container_name: influxdb
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUXDB_ADMIN_USERNAME}
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUXDB_ADMIN_PASSWORD}
+      DOCKER_INFLUXDB_INIT_ORG: ${INFLUXDB_ORG}
+      DOCKER_INFLUXDB_INIT_BUCKET: ${INFLUXDB_BUCKET}
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_ADMIN_TOKEN}
+      DOCKER_INFLUXDB_INIT_RETENTION: ${DATA_RETENTION_DAYS}d
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+      - influxdb_config:/etc/influxdb2
+    networks:
+      - monitor-net
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ──────────────────────────────────────────────
+  # Grafana 11 — Visualization & Dashboards
+  # ──────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana-oss:11.4.0
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/internet-monitor.json
+      INFLUXDB_URL: http://influxdb:8086
+      INFLUXDB_ORG: ${INFLUXDB_ORG}
+      INFLUXDB_BUCKET: ${INFLUXDB_BUCKET}
+      INFLUXDB_TOKEN: ${INFLUXDB_ADMIN_TOKEN}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/provisioning/dashboards/internet-monitor.json:/var/lib/grafana/dashboards/internet-monitor.json
+    networks:
+      - monitor-net
+    depends_on:
+      influxdb:
+        condition: service_healthy
+
+  # ──────────────────────────────────────────────
+  # Ping Monitor — Connectivity Checker
+  # ──────────────────────────────────────────────
+  ping-monitor:
+    build:
+      context: ./ping-monitor
+      dockerfile: Dockerfile
+    container_name: ping-monitor
+    restart: unless-stopped
+    environment:
+      INFLUXDB_URL: ${INFLUXDB_URL}
+      INFLUXDB_TOKEN: ${INFLUXDB_ADMIN_TOKEN}
+      INFLUXDB_ORG: ${INFLUXDB_ORG}
+      INFLUXDB_BUCKET: ${INFLUXDB_BUCKET}
+      PING_TARGETS: ${PING_TARGETS}
+      PING_INTERVAL: ${PING_INTERVAL}
+      PING_TIMEOUT: ${PING_TIMEOUT}
+      CONSECUTIVE_FAILURES_THRESHOLD: ${CONSECUTIVE_FAILURES_THRESHOLD}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
+    networks:
+      - monitor-net
+    depends_on:
+      influxdb:
+        condition: service_healthy
+
+  # ──────────────────────────────────────────────
+  # Speed Tester — Bandwidth Measurement
+  # ──────────────────────────────────────────────
+  speed-tester:
+    build:
+      context: ./speed-tester
+      dockerfile: Dockerfile
+    container_name: speed-tester
+    restart: unless-stopped
+    environment:
+      INFLUXDB_URL: ${INFLUXDB_URL}
+      INFLUXDB_TOKEN: ${INFLUXDB_ADMIN_TOKEN}
+      INFLUXDB_ORG: ${INFLUXDB_ORG}
+      INFLUXDB_BUCKET: ${INFLUXDB_BUCKET}
+      SPEED_TEST_INTERVAL: ${SPEED_TEST_INTERVAL}
+    networks:
+      - monitor-net
+    depends_on:
+      influxdb:
+        condition: service_healthy
+
+volumes:
+  influxdb_data:
+  influxdb_config:
+  grafana_data:
+
+networks:
+  monitor-net:
+    driver: bridge

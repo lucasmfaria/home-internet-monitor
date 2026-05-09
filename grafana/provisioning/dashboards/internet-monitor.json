@@ -1,0 +1,227 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": true,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Connection Status",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "influxdb", "uid": "" },
+          "query": "from(bucket: \"internet_monitor\")\n  |> range(start: -1m)\n  |> filter(fn: (r) => r._measurement == \"ping_result\" and r._field == \"success\")\n  |> last()\n  |> group()\n  |> mean()"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "1": { "text": "ONLINE", "color": "green", "index": 0 } } },
+            { "type": "range", "options": { "from": 0, "to": 0.99, "result": { "text": "OFFLINE", "color": "red", "index": 1 } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "center", "textMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 2,
+      "title": "Uptime (24h)",
+      "type": "gauge",
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"internet_monitor\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r._measurement == \"ping_result\" and r._field == \"success\")\n  |> group()\n  |> mean()\n  |> map(fn: (r) => ({ r with _value: r._value * 100.0 }))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0, "max": 100,
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "orange", "value": 95 }, { "color": "yellow", "value": 99 }, { "color": "green", "value": 99.9 } ] }
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "showThresholdLabels": false, "showThresholdMarkers": true }
+    },
+    {
+      "id": 3,
+      "title": "Uptime (7d)",
+      "type": "gauge",
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"internet_monitor\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"ping_result\" and r._field == \"success\")\n  |> group()\n  |> mean()\n  |> map(fn: (r) => ({ r with _value: r._value * 100.0 }))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "percent", "min": 0, "max": 100, "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "orange", "value": 95 }, { "color": "yellow", "value": 99 }, { "color": "green", "value": 99.9 } ] } },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "showThresholdLabels": false, "showThresholdMarkers": true }
+    },
+    {
+      "id": 4,
+      "title": "Uptime (30d)",
+      "type": "gauge",
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"internet_monitor\")\n  |> range(start: -30d)\n  |> filter(fn: (r) => r._measurement == \"ping_result\" and r._field == \"success\")\n  |> group()\n  |> mean()\n  |> map(fn: (r) => ({ r with _value: r._value * 100.0 }))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "percent", "min": 0, "max": 100, "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "orange", "value": 95 }, { "color": "yellow", "value": 99 }, { "color": "green", "value": 99.9 } ] } },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "showThresholdLabels": false, "showThresholdMarkers": true }
+    },
+    {
+      "id": 5,
+      "title": "Last Download Speed",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"internet_monitor\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r._measurement == \"speed_test\" and r._field == \"download_mbps\")\n  |> last()"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "Mbps", "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "orange", "value": 25 }, { "color": "yellow", "value": 50 }, { "color": "green", "value": 100 } ] } }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "textMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 6,
+      "title": "Last Upload Speed",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"internet_monitor\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r._measurement == \"speed_test\" and r._field == \"upload_mbps\")\n  |> last()"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "Mbps", "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "orange", "value": 10 }, { "color": "yellow", "value": 25 }, { "color": "green", "value": 50 } ] } }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "textMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 7,
+      "title": "Ping Latency (RTT)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"internet_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"ping_result\" and r._field == \"rtt_ms\" and r._value > 0)\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms", "custom": { "drawStyle": "line", "lineWidth": 1, "fillOpacity": 15, "pointSize": 3, "showPoints": "auto", "spanNulls": false } }, "overrides": [] },
+      "options": { "tooltip": { "mode": "multi", "sort": "desc" }, "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max", "min"] } }
+    },
+    {
+      "id": 8,
+      "title": "Connection State Timeline",
+      "type": "state-timeline",
+      "gridPos": { "h": 4, "w": 12, "x": 12, "y": 4 },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"internet_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"ping_result\" and r._field == \"success\")\n  |> group(columns: [\"target\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> map(fn: (r) => ({ r with _value: if r._value >= 0.5 then 1.0 else 0.0 }))"
+        }
+      ],
+      "fieldConfig": { "defaults": { "mappings": [ { "type": "value", "options": { "0": { "text": "DOWN", "color": "red", "index": 0 }, "1": { "text": "UP", "color": "green", "index": 1 } } } ], "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] } }, "overrides": [] },
+      "options": { "showValue": "auto", "mergeValues": true, "alignValue": "center" }
+    },
+    {
+      "id": 9,
+      "title": "Outage Events",
+      "type": "table",
+      "gridPos": { "h": 4, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"internet_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"outage_event\")\n  |> pivot(rowKey: [\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> group()\n  |> sort(columns: [\"_time\"], desc: true)\n  |> keep(columns: [\"_time\", \"type\", \"duration_seconds\"])"
+        }
+      ],
+      "fieldConfig": { "defaults": {}, "overrides": [ { "matcher": { "id": "byName", "options": "duration_seconds" }, "properties": [ { "id": "unit", "value": "s" }, { "id": "displayName", "value": "Duration" } ] }, { "matcher": { "id": "byName", "options": "type" }, "properties": [ { "id": "displayName", "value": "Event" } ] }, { "matcher": { "id": "byName", "options": "_time" }, "properties": [ { "id": "displayName", "value": "Time" } ] } ] },
+      "options": { "showHeader": true, "sortBy": [ { "displayName": "Time", "desc": true } ] }
+    },
+    {
+      "id": 10,
+      "title": "Download Speed Over Time",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"internet_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"speed_test\" and r._field == \"download_mbps\")"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "Mbps", "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 20, "pointSize": 5, "showPoints": "always", "spanNulls": false, "lineInterpolation": "smooth" }, "color": { "mode": "fixed", "fixedColor": "blue" } }, "overrides": [] },
+      "options": { "tooltip": { "mode": "single" }, "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max", "min", "lastNotNull"] } }
+    },
+    {
+      "id": 11,
+      "title": "Upload Speed Over Time",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"internet_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"speed_test\" and r._field == \"upload_mbps\")"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "Mbps", "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 20, "pointSize": 5, "showPoints": "always", "spanNulls": false, "lineInterpolation": "smooth" }, "color": { "mode": "fixed", "fixedColor": "purple" } }, "overrides": [] },
+      "options": { "tooltip": { "mode": "single" }, "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max", "min", "lastNotNull"] } }
+    },
+    {
+      "id": 12,
+      "title": "Speed Test Latency & Jitter",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"internet_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"speed_test\" and (r._field == \"latency_ms\" or r._field == \"jitter_ms\"))"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms", "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "pointSize": 5, "showPoints": "always" } }, "overrides": [] },
+      "options": { "tooltip": { "mode": "multi" }, "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max", "lastNotNull"] } }
+    },
+    {
+      "id": 13,
+      "title": "Daily Uptime Report",
+      "type": "table",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
+      "targets": [
+        {
+          "refId": "A",
+          "query": "from(bucket: \"internet_monitor\")\n  |> range(start: -30d)\n  |> filter(fn: (r) => r._measurement == \"ping_result\" and r._field == \"success\")\n  |> group()\n  |> aggregateWindow(every: 1d, fn: mean, createEmpty: false)\n  |> map(fn: (r) => ({ r with _value: r._value * 100.0 }))\n  |> sort(columns: [\"_time\"], desc: true)\n  |> keep(columns: [\"_time\", \"_value\"])"
+        }
+      ],
+      "fieldConfig": { "defaults": {}, "overrides": [ { "matcher": { "id": "byName", "options": "_time" }, "properties": [ { "id": "displayName", "value": "Date" } ] }, { "matcher": { "id": "byName", "options": "_value" }, "properties": [ { "id": "displayName", "value": "Uptime %" }, { "id": "unit", "value": "percent" }, { "id": "decimals", "value": 4 }, { "id": "thresholds", "value": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "orange", "value": 95 }, { "color": "green", "value": 99.9 } ] } }, { "id": "custom.displayMode", "value": "color-background" } ] } ] },
+      "options": { "showHeader": true, "sortBy": [ { "displayName": "Date", "desc": true } ] }
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": ["internet", "monitoring"],
+  "templating": { "list": [] },
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Internet Monitor",
+  "uid": "internet-monitor-main",
+  "version": 1
+}

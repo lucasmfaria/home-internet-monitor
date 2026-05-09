@@ -1,0 +1,25 @@
+# Environment secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.venv/
+
+# Docker volumes (if using bind mounts)
+influxdb_data/
+grafana_data/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

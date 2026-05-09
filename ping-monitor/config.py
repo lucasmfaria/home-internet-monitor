@@ -4,6 +4,10 @@ All values are read from environment variables with sensible defaults.
 """
 
 import os
+import socket
+
+# Device identification
+DEVICE_NAME = os.getenv("DEVICE_NAME", socket.gethostname())
 
 # InfluxDB connection
 INFLUXDB_URL = os.getenv("INFLUXDB_URL", "http://influxdb:8086")

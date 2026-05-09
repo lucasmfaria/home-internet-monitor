@@ -122,6 +122,7 @@ def write_ping_results(write_api, results: list[dict]):
     for r in results:
         p = (
             Point("ping_result")
+            .tag("device", config.DEVICE_NAME)
             .tag("target", r["target"])
             .field("success", r["success"])
             .field("rtt_ms", r["rtt_ms"])
@@ -139,6 +140,7 @@ def write_outage_event(write_api, event_type: str, duration_seconds: float = 0.0
     """Write an outage event (drop or recovery) to InfluxDB."""
     p = (
         Point("outage_event")
+        .tag("device", config.DEVICE_NAME)
         .tag("type", event_type)
         .field("duration_seconds", duration_seconds)
         .time(datetime.now(timezone.utc), WritePrecision.NS)
@@ -222,6 +224,7 @@ async def wait_for_influxdb():
 async def main():
     logger.info("=" * 60)
     logger.info("  Ping Monitor starting")
+    logger.info(f"  Device  : {config.DEVICE_NAME}")
     logger.info(f"  Targets : {config.PING_TARGETS}")
     logger.info(f"  Interval: {config.PING_INTERVAL}s")
     logger.info(f"  Timeout : {config.PING_TIMEOUT}s")
@@ -271,6 +274,7 @@ async def main():
 
                 msg = (
                     "🔴 <b>Internet Connection DOWN</b>\n\n"
+                    f"🖥️ <b>Device:</b> {config.DEVICE_NAME}\n"
                     f"⏰ <b>Time:</b> {ts_str}\n"
                     f"🎯 <b>All targets unreachable:</b>\n"
                     + "\n".join(f"  • {t}" for t in config.PING_TARGETS)
@@ -288,6 +292,7 @@ async def main():
 
                 msg = (
                     "🟢 <b>Internet Connection RESTORED</b>\n\n"
+                    f"🖥️ <b>Device:</b> {config.DEVICE_NAME}\n"
                     f"⏰ <b>Time:</b> {ts_str}\n"
                     f"⏱️ <b>Total downtime:</b> {dur_str}\n"
                 )

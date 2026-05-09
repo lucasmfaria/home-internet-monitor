@@ -131,6 +131,7 @@ def write_speed_results(write_api, results: dict):
     """Write speed test results to InfluxDB."""
     p = (
         Point("speed_test")
+        .tag("device", config.DEVICE_NAME)
         .tag("server_name", results["server_name"])
         .tag("server_id", results["server_id"])
         .tag("server_location", results["server_location"])
@@ -179,6 +180,7 @@ def wait_for_influxdb():
 def main():
     logger.info("=" * 60)
     logger.info("  Speed Tester starting")
+    logger.info(f"  Device  : {config.DEVICE_NAME}")
     logger.info(f"  Interval: every {config.SPEED_TEST_INTERVAL} minutes")
     logger.info("=" * 60)
 

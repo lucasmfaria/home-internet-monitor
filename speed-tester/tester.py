@@ -12,10 +12,9 @@ import sys
 import time
 from datetime import datetime, timezone
 
+import config
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
-
-import config
 
 # ─── Logging ───────────────────────────────────────────────
 logging.basicConfig(
@@ -44,7 +43,9 @@ def run_speedtest() -> dict | None:
         )
 
         if result.returncode != 0:
-            logger.error(f"Speedtest CLI failed (exit {result.returncode}): {result.stderr}")
+            logger.error(
+                f"Speedtest CLI failed (exit {result.returncode}): {result.stderr}"
+            )
             return None
 
         data = json.loads(result.stdout)

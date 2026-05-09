@@ -1,9 +1,10 @@
 """
-Ping Monitor — Continuous connectivity checker with InfluxDB logging and Telegram alerts.
+Ping Monitor — Continuous connectivity checker with InfluxDB logging and
+Telegram alerts.
 
-Pings multiple targets concurrently every N seconds. Detects outage windows by tracking
-consecutive failures across all targets. Fires Telegram alerts on connection drop and recovery,
-including exact downtime duration.
+Pings multiple targets concurrently every N seconds. Detects outage windows by
+tracking consecutive failures across all targets. Fires Telegram alerts on
+connection drop and recovery, including exact downtime duration.
 """
 
 import asyncio
@@ -14,10 +15,9 @@ import time
 from datetime import datetime, timezone
 
 import aiohttp
+import config
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
-
-import config
 
 # ─── Logging ───────────────────────────────────────────────
 logging.basicConfig(
@@ -58,7 +58,6 @@ class ConnectionState:
             self.consecutive_all_fail = 0
             if self.is_down:
                 self.is_down = False
-                duration = time.time() - self.down_since if self.down_since else 0
                 self.down_since = None
                 return "recovery"
         return None
@@ -76,7 +75,12 @@ async def ping_target(target: str, timeout: int) -> dict:
     """
     try:
         proc = await asyncio.create_subprocess_exec(
-            "ping", "-c", "1", "-W", str(timeout), target,
+            "ping",
+            "-c",
+            "1",
+            "-W",
+            str(timeout),
+            target,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
@@ -141,7 +145,9 @@ def write_outage_event(write_api, event_type: str, duration_seconds: float = 0.0
     )
     try:
         write_api.write(bucket=config.INFLUXDB_BUCKET, record=p)
-        logger.info(f"Outage event written: type={event_type}, duration={duration_seconds:.1f}s")
+        logger.info(
+            f"Outage event written: type={event_type}, duration={duration_seconds:.1f}s"
+        )
     except Exception as e:
         logger.error(f"Failed to write outage event to InfluxDB: {e}")
 
@@ -165,7 +171,9 @@ async def send_telegram_alert(message: str):
 
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.post(url, json=payload, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+            async with session.post(
+                url, json=payload, timeout=aiohttp.ClientTimeout(total=10)
+            ) as resp:
                 if resp.status == 200:
                     logger.info("Telegram alert sent successfully.")
                 else:

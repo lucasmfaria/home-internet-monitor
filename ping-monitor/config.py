@@ -5,7 +5,6 @@ All values are read from environment variables with sensible defaults.
 
 import os
 
-
 # InfluxDB connection
 INFLUXDB_URL = os.getenv("INFLUXDB_URL", "http://influxdb:8086")
 INFLUXDB_TOKEN = os.getenv("INFLUXDB_TOKEN", "")

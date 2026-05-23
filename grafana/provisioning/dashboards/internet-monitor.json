@@ -16,7 +16,7 @@
         {
           "refId": "A",
           "datasource": { "type": "influxdb", "uid": "" },
-          "query": "from(bucket: \"internet_monitor\")\n  |> range(start: -1m)\n  |> filter(fn: (r) => r._measurement == \"ping_result\" and r._field == \"success\")\n  |> last()\n  |> group()\n  |> mean()"
+          "query": "from(bucket: \"internet_monitor\")\n  |> range(start: -1m)\n  |> filter(fn: (r) => r._measurement == \"ping_result\" and r._field == \"success\")\n  |> toFloat()\n  |> last()\n  |> group()\n  |> mean()"
         }
       ],
       "fieldConfig": {
@@ -39,7 +39,7 @@
       "targets": [
         {
           "refId": "A",
-          "query": "from(bucket: \"internet_monitor\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r._measurement == \"ping_result\" and r._field == \"success\")\n  |> group()\n  |> mean()\n  |> map(fn: (r) => ({ r with _value: r._value * 100.0 }))"
+          "query": "from(bucket: \"internet_monitor\")\n  |> range(start: -24h)\n  |> filter(fn: (r) => r._measurement == \"ping_result\" and r._field == \"success\")\n  |> toFloat()\n  |> group()\n  |> mean()\n  |> map(fn: (r) => ({ r with _value: r._value * 100.0 }))"
         }
       ],
       "fieldConfig": {
@@ -60,7 +60,7 @@
       "targets": [
         {
           "refId": "A",
-          "query": "from(bucket: \"internet_monitor\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"ping_result\" and r._field == \"success\")\n  |> group()\n  |> mean()\n  |> map(fn: (r) => ({ r with _value: r._value * 100.0 }))"
+          "query": "from(bucket: \"internet_monitor\")\n  |> range(start: -7d)\n  |> filter(fn: (r) => r._measurement == \"ping_result\" and r._field == \"success\")\n  |> toFloat()\n  |> group()\n  |> mean()\n  |> map(fn: (r) => ({ r with _value: r._value * 100.0 }))"
         }
       ],
       "fieldConfig": {
@@ -77,7 +77,7 @@
       "targets": [
         {
           "refId": "A",
-          "query": "from(bucket: \"internet_monitor\")\n  |> range(start: -30d)\n  |> filter(fn: (r) => r._measurement == \"ping_result\" and r._field == \"success\")\n  |> group()\n  |> mean()\n  |> map(fn: (r) => ({ r with _value: r._value * 100.0 }))"
+          "query": "from(bucket: \"internet_monitor\")\n  |> range(start: -30d)\n  |> filter(fn: (r) => r._measurement == \"ping_result\" and r._field == \"success\")\n  |> toFloat()\n  |> group()\n  |> mean()\n  |> map(fn: (r) => ({ r with _value: r._value * 100.0 }))"
         }
       ],
       "fieldConfig": {
@@ -136,7 +136,7 @@
       "targets": [
         {
           "refId": "A",
-          "query": "from(bucket: \"internet_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"ping_result\" and r._field == \"success\")\n  |> group(columns: [\"target\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> map(fn: (r) => ({ r with _value: if r._value >= 0.5 then 1.0 else 0.0 }))"
+          "query": "from(bucket: \"internet_monitor\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"ping_result\" and r._field == \"success\")\n  |> toFloat()\n  |> group(columns: [\"target\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> map(fn: (r) => ({ r with _value: if r._value >= 0.5 then 1.0 else 0.0 }))"
         }
       ],
       "fieldConfig": { "defaults": { "mappings": [ { "type": "value", "options": { "0": { "text": "DOWN", "color": "red", "index": 0 }, "1": { "text": "UP", "color": "green", "index": 1 } } } ], "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] } }, "overrides": [] },
@@ -206,7 +206,7 @@
       "targets": [
         {
           "refId": "A",
-          "query": "from(bucket: \"internet_monitor\")\n  |> range(start: -30d)\n  |> filter(fn: (r) => r._measurement == \"ping_result\" and r._field == \"success\")\n  |> group()\n  |> aggregateWindow(every: 1d, fn: mean, createEmpty: false)\n  |> map(fn: (r) => ({ r with _value: r._value * 100.0 }))\n  |> sort(columns: [\"_time\"], desc: true)\n  |> keep(columns: [\"_time\", \"_value\"])"
+          "query": "from(bucket: \"internet_monitor\")\n  |> range(start: -30d)\n  |> filter(fn: (r) => r._measurement == \"ping_result\" and r._field == \"success\")\n  |> toFloat()\n  |> group()\n  |> aggregateWindow(every: 1d, fn: mean, createEmpty: false)\n  |> map(fn: (r) => ({ r with _value: r._value * 100.0 }))\n  |> sort(columns: [\"_time\"], desc: true)\n  |> keep(columns: [\"_time\", \"_value\"])"
         }
       ],
       "fieldConfig": { "defaults": {}, "overrides": [ { "matcher": { "id": "byName", "options": "_time" }, "properties": [ { "id": "displayName", "value": "Date" } ] }, { "matcher": { "id": "byName", "options": "_value" }, "properties": [ { "id": "displayName", "value": "Uptime %" }, { "id": "unit", "value": "percent" }, { "id": "decimals", "value": 4 }, { "id": "thresholds", "value": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "orange", "value": 95 }, { "color": "green", "value": 99.9 } ] } }, { "id": "custom.displayMode", "value": "color-background" } ] } ] },

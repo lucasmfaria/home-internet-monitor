@@ -9,8 +9,10 @@ import json
 import logging
 import subprocess
 import sys
+import threading
 import time
 from datetime import datetime, timezone
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 import config
 from influxdb_client import InfluxDBClient, Point, WritePrecision
@@ -106,7 +108,7 @@ def parse_results(data: dict) -> dict:
         "jitter_ms": round(jitter_ms, 2),
         "download_latency_ms": round(dl_latency.get("iqm", 0.0), 2),
         "upload_latency_ms": round(ul_latency.get("iqm", 0.0), 2),
-        "packet_loss": round(packet_loss, 2) if packet_loss >= 0 else -1.0,
+        "packet_loss": int(packet_loss) if packet_loss >= 0 else -1,
         "server_name": server_name,
         "server_id": server_id,
         "server_location": server_location,
@@ -176,6 +178,44 @@ def wait_for_influxdb():
         time.sleep(2)
 
 
+# ─── Webhook Trigger Server ────────────────────────────────
+trigger_event = threading.Event()
+
+
+class TriggerHandler(BaseHTTPRequestHandler):
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
+
+    def do_GET(self):
+        if self.path == "/trigger":
+            self.send_response(200)
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            self.wfile.write(b'{"status": "triggered"}')
+            logger.info("Received manual trigger request via API.")
+            trigger_event.set()
+        else:
+            self.send_response(404)
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+
+    def log_message(self, format, *args):
+        # Suppress default HTTP logging
+        pass
+
+
+def start_webhook_server(port=8080):
+    server = HTTPServer(("0.0.0.0", port), TriggerHandler)
+    logger.info(f"Webhook listener started on port {port}")
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
+
 # ─── Main Loop ─────────────────────────────────────────────
 def main():
     logger.info("=" * 60)
@@ -185,6 +225,7 @@ def main():
     logger.info("=" * 60)
 
     wait_for_influxdb()
+    start_webhook_server(config.SPEED_TEST_WEBHOOK_PORT)
 
     client, write_api = create_influx_client()
     interval_seconds = config.SPEED_TEST_INTERVAL * 60
@@ -210,7 +251,9 @@ def main():
             elapsed = time.monotonic() - test_start
             sleep_time = max(0, interval_seconds - elapsed)
             logger.info(f"Next speed test in {sleep_time / 60:.0f} minutes.")
-            time.sleep(sleep_time)
+            if trigger_event.wait(timeout=sleep_time):
+                logger.info("Speed test triggered manually via webhook!")
+                trigger_event.clear()
 
     except KeyboardInterrupt:
         logger.info("Shutting down...")

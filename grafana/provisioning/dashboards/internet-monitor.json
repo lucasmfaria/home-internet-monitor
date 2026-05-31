@@ -211,13 +211,45 @@
       ],
       "fieldConfig": { "defaults": {}, "overrides": [ { "matcher": { "id": "byName", "options": "_time" }, "properties": [ { "id": "displayName", "value": "Date" } ] }, { "matcher": { "id": "byName", "options": "_value" }, "properties": [ { "id": "displayName", "value": "Uptime %" }, { "id": "unit", "value": "percent" }, { "id": "decimals", "value": 4 }, { "id": "thresholds", "value": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "orange", "value": 95 }, { "color": "green", "value": 99.9 } ] } }, { "id": "custom.displayMode", "value": "color-background" } ] } ] },
       "options": { "showHeader": true, "sortBy": [ { "displayName": "Date", "desc": true } ] }
+    },
+    {
+      "id": 14,
+      "title": "Manual Actions",
+      "type": "text",
+      "gridPos": { "h": 3, "w": 24, "x": 0, "y": 28 },
+      "options": {
+        "mode": "html",
+        "content": "<div style=\"display: flex; justify-content: center; align-items: center; height: 100%;\">\n  <button onclick=\"fetch('http://' + window.location.hostname + ':${webhook_port}/trigger').then(() => alert('Speed Test Triggered! Check the dashboard in a couple of minutes.')).catch(e => alert('Error triggering test: ' + e));\" style=\"padding: 10px 20px; font-size: 16px; background-color: #3274D9; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: background-color 0.2s;\">\n    ▶ Run Speed Test Now\n  </button>\n</div>"
+      }
     }
   ],
   "refresh": "10s",
   "schemaVersion": 39,
   "style": "dark",
   "tags": ["internet", "monitoring"],
-  "templating": { "list": [] },
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "8081",
+          "value": "8081"
+        },
+        "hide": 0,
+        "name": "webhook_port",
+        "options": [
+          {
+            "selected": true,
+            "text": "8081",
+            "value": "8081"
+          }
+        ],
+        "query": "8081",
+        "skipUrlSync": false,
+        "type": "constant"
+      }
+    ]
+  },
   "time": { "from": "now-6h", "to": "now" },
   "timepicker": {},
   "timezone": "",
